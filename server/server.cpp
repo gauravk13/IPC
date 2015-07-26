@@ -5,11 +5,13 @@
 #include <string.h>
 #include <sys/uio.h>
 #include <unistd.h>
+#include <fstream>
+#include <cstdlib>
 
 using std::cout;
 using std::cerr;
 using std::string;
-using std::fstream;
+using std::ofstream;
 
 void dostuff(int); 
 void create_files(int no_of_files);
@@ -24,12 +26,11 @@ int main(int argc, char *argv[])
 {
      int sockfd, newsockfd, portno, pid;
      socklen_t clilen; 
-    struct sockaddr_in serv_addr, cli_addr;
-
-     if (argc < 2) {
-         cout<<"ERROR, no port provided\n";
-         exit(1);
+     struct sockaddr_in serv_addr, cli_addr;
+     if (argc != 2) {
+         error("ERROR, no port provided\n");
      }
+     create_files(10);
      sockfd = socket(AF_INET, SOCK_STREAM, 0);
      if (sockfd < 0) 
         error("ERROR opening socket");
@@ -93,8 +94,11 @@ void create_files(int no_of_files) {
 }
 
 void create_single_file (int file_id) {
-  fstream myfile;
-  string file_name  = file_id + ".txt" ;
+  cout<<file_id;
+  ofstream myfile;
+  std::string file_name = std::to_string(file_id);
+  file_name.append(".txt") ;
   myfile.open (file_name);
+  myfile<<"hello";
   myfile.close();
 }

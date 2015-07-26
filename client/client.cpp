@@ -7,9 +7,9 @@
 #include <string.h>
 #include <sys/uio.h>
 #include <unistd.h>
+#include <regex>
 
-using std::cout;
-using std::cerr;
+using namespace std;
 
 int main(int argc, char *argv[])
 {
@@ -18,12 +18,11 @@ int main(int argc, char *argv[])
     struct hostent *server;
 
     char buffer[256];
-    if (argc < 4) {
-       cerr<<"usage "<<argv[0]<<" hostname port client_uid \n";
+    if (argc < 3) {
+      cerr<<"usage "<<argv[0]<<" hostname port \n";
        exit(0);
     }
     portno = atoi(argv[2]);
-    //client_uid = atoi(argv[3]);
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) {
         cerr<<"ERROR opening socket\n";
@@ -46,7 +45,7 @@ int main(int argc, char *argv[])
         exit(0);
      }	
     
- cout<<"Please enter the client id: ";
+   cout<<"Please enter the client id: ";
 
     bzero(buffer,256);
     fgets(buffer,255,stdin);
@@ -55,6 +54,35 @@ int main(int argc, char *argv[])
          cerr<<"ERROR writing to socket\n";
          exit(0);
    }
+   
+   // getting mapping info from server 
+    bzero(buffer,256);
+    n = read(sockfd,buffer,255);
+    if (n < 0) {
+         cerr<<"ERROR reading from socket\n";
+         exit(0);
+    }
+    cout<<buffer<<"\n";
+    
+      if (regex_match ("Join any group from 1-10 to proceed", regex("(Join any group)(.*)") ))
+{
+     cout<<"Please enter the group ID: ";
+     bzero(buffer,256);
+     fgets(buffer,255,stdin);
+     n = write(sockfd,buffer,strlen(buffer));
+     if (n < 0) {
+         cerr<<"ERROR writing to socket\n";
+         exit(0);
+     } else {
+      	bzero(buffer,256);
+    	n = read(sockfd,buffer,255);
+    	if (n < 0) {
+        	 cerr<<"ERROR reading from socket\n";
+       		  exit(0);
+   	 }	
+        cout<<buffer<<"\n";
+     }
+ }
 
     cout<<"Please enter the message: ";
 

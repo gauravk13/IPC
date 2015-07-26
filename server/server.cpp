@@ -7,12 +7,13 @@
 #include <unistd.h>
 #include <fstream>
 #include <cstdlib>
+#include <map>
+#include <list>
+#include <stdlib.h>
 
-using std::cout;
-using std::cerr;
-using std::string;
-using std::ofstream;
+using namespace std;
 
+void map_client_to_group(int, int);
 void dostuff(int); 
 void create_files(int no_of_files);
 void create_single_file(int file_id);
@@ -21,6 +22,9 @@ void error(string msg)
     cerr<<msg<<"\n";
     exit(1);
 }
+
+map <int , list < int > > GtC;
+map <int, int> CtG;
 
 int main(int argc, char *argv[])
 {
@@ -69,22 +73,67 @@ int main(int argc, char *argv[])
  *****************************************/
 void dostuff (int sock)
 {
-   int n;
+   int n,client_id,group_id;
    char buffer[256];
       
+  //client -id  
    bzero(buffer,256);
    n = read(sock,buffer,255);
    if (n < 0) error("ERROR reading from socket");
    cout<<buffer<<"\n";
+   
+   client_id = atoi(buffer);
+   
+  // check for client-group mapping
+   map_client_to_group(sock,client_id);
+  
+   // message of client 
    bzero(buffer,256);
    n = read(sock,buffer,255);
    if (n < 0) error("ERROR reading from socket");
+
+   group_id = CtG[client_id];
+   string file_name = to_string(group_id);
+   file_name.append(".txt");
+  // write to file 
+   ofstream myfile;
+  myfile.open (file_name);
+  myfile<<"Client Id: "<< client_id<<" :: ";
+  myfile<<buffer;
+  myfile.close();
+
    cout<<"Here is the message : " <<buffer<<"\n";
    n = write(sock,"I got your message",18);
    if (n < 0) error("ERROR writing to socket");
 }
 
-
+void map_client_to_group( int sock, int client_id) {
+      int n,group_id;
+      char buffer[255];
+      if( !CtG[client_id] ) {
+           n = write(sock,"Join any group from 1-10 to proceed",50);
+   	   if (n < 0) error("ERROR writing to socket");	
+           // got the group_id
+           bzero(buffer,256);
+           n = read(sock,buffer,255);
+           if (n < 0) error("ERROR reading from socket");
+ 	   group_id = atoi(buffer);
+         // updating map CtG
+           CtG[client_id] = group_id;
+         // updating map GtC  
+	 list <int> l = GtC[group_id];
+           l.push_back(client_id);
+           GtC[group_id] = l;
+  
+       }  else {
+		string msg = "you are part of group Id : ";
+        	string s = to_string( CtG[client_id]);
+		msg.append(s);
+                const void * a = msg.c_str();
+		n = write(sock,a,50);
+        	if (n < 0) error("ERROR writing to socket");
+	}
+}
 
 void create_files(int no_of_files) {
   
@@ -94,7 +143,6 @@ void create_files(int no_of_files) {
 }
 
 void create_single_file (int file_id) {
-  cout<<file_id;
   ofstream myfile;
   std::string file_name = std::to_string(file_id);
   file_name.append(".txt") ;

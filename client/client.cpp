@@ -73,7 +73,8 @@ int main(int argc, char *argv[])
      if (n < 0) {
          cerr<<"ERROR writing to socket\n";
          exit(0);
-     } else {
+     }
+   } else {
       	bzero(buffer,256);
     	n = read(sockfd,buffer,255);
     	if (n < 0) {
@@ -82,7 +83,7 @@ int main(int argc, char *argv[])
    	 }	
         cout<<buffer<<"\n";
      }
- }
+ 
 
     cout<<"Please enter the message: ";
 

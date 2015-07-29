@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
      if (argc != 2) {
          error("ERROR, no port provided\n");
      }
-     create_files(10);
+     //create_files(10);
      sockfd = socket(AF_INET, SOCK_STREAM, 0);
      if (sockfd < 0) 
         error("ERROR opening socket");
@@ -59,7 +59,8 @@ int main(int argc, char *argv[])
          if (pid == 0)  {
              close(sockfd);
              dostuff(newsockfd);
-             exit(0);
+//             close(newsockfd);
+	     exit(0);
          }
          else close(newsockfd);
      } /* end of while */
@@ -83,7 +84,7 @@ void dostuff (int sock)
    cout<<buffer<<"\n";
    
    client_id = atoi(buffer);
-   
+  
   // check for client-group mapping
    map_client_to_group(sock,client_id);
   
@@ -97,7 +98,7 @@ void dostuff (int sock)
    file_name.append(".txt");
   // write to file 
    ofstream myfile;
-  myfile.open (file_name);
+  myfile.open (file_name,fstream::app);
   myfile<<"Client Id: "<< client_id<<" :: ";
   myfile<<buffer;
   myfile.close();
@@ -105,11 +106,13 @@ void dostuff (int sock)
    cout<<"Here is the message : " <<buffer<<"\n";
    n = write(sock,"I got your message",18);
    if (n < 0) error("ERROR writing to socket");
+ cout<<"inside dostuff map value "<<CtG[client_id]<<"CtG ";
 }
 
 void map_client_to_group( int sock, int client_id) {
       int n,group_id;
       char buffer[255];
+      cout<<"map value "<<CtG[client_id]<<"CtG ";
       if( !CtG[client_id] ) {
            n = write(sock,"Join any group from 1-10 to proceed",50);
    	   if (n < 0) error("ERROR writing to socket");	
@@ -117,14 +120,17 @@ void map_client_to_group( int sock, int client_id) {
            bzero(buffer,256);
            n = read(sock,buffer,255);
            if (n < 0) error("ERROR reading from socket");
- 	   group_id = atoi(buffer);
-         // updating map CtG
+           cout<<"getting "<<buffer<<"from client\n";
+ 	   string buf = string(buffer);
+           group_id = stoi(buf);
+         
+            // updating map CtG
            CtG[client_id] = group_id;
-         // updating map GtC  
+           // updating map GtC  
 	 list <int> l = GtC[group_id];
            l.push_back(client_id);
            GtC[group_id] = l;
-  
+           cout<<CtG[client_id]; 
        }  else {
 		string msg = "you are part of group Id : ";
         	string s = to_string( CtG[client_id]);
